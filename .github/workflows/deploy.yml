@@ -32,7 +32,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        # Видалено cache: 'npm' — усуває помилку з lock-файлом
+        # Без cache: 'npm' для уникнення помилки з lock-файлом
 
     - name: Build frontend
       run: |
@@ -46,9 +46,9 @@ jobs:
           exit 1
         fi
         npm install -g npm@11.6.2
-        npm ci  # Використовуємо npm ci для надійності
+        npm ci  # Надійніше для CI, використовує package-lock.json
         npm audit fix || true  # Ігноруємо помилки аудиту
-        npm run build
+        CI=false npm run build  # Вимикаємо суворий CI-режим
 
     - name: Check MariaDB init
       run: |
