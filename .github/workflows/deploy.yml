@@ -21,6 +21,10 @@ jobs:
 
     - name: Build backend
       run: |
+        if [ ! -d "backend" ]; then
+          echo "Backend directory not found!"
+          exit 1
+        fi
         cd backend
         mvn clean package -DskipTests
 
@@ -28,19 +32,26 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
+        # Видалено cache: 'npm' — це виправляє помилку
 
     - name: Build frontend
       run: |
+        if [ ! -d "frontend" ]; then
+          echo "Frontend directory not found!"
+          exit 1
+        fi
         cd frontend
+        if [ ! -f "package.json" ]; then
+          echo "package.json not found in frontend!"
+          exit 1
+        fi
         npm install -g npm@11.6.2
-        npm install
+        npm ci  # Замінено на npm ci для надійності
         npm audit fix
         npm run build
 
     - name: Check MariaDB init
       run: |
-        # Перевіряємо, чи існує init.sql у db
         if [ ! -f "db/init.sql" ]; then
           echo "init.sql not found, creating basic one"
           mkdir -p db
@@ -55,7 +66,7 @@ jobs:
         fi
 
   deploy:
-    needs: build-and-test  # Запускається тільки після успішного білду
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -67,13 +78,11 @@ jobs:
         host: ${{ secrets.SERVER_IP }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: | 
+        port: 2222  # Додано порт для SSH (з попередніх інструкцій)
+        script: |
           cd ${{ secrets.SERVER_DOCKER_COMPOSE_PATH }}
-          # Pull latest changes (assuming git repo cloned on server)
           git pull origin main
-          # Build and up (use --build to rebuild images)
           docker-compose down
           docker-compose build --no-cache
           docker-compose up -d
-          # Check logs if needed
-          docker-compose logs -f backend || true 
+          docker-compose logs -f backend || true
