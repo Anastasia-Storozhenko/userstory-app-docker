@@ -32,7 +32,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        # Без cache: 'npm' для уникнення помилки з lock-файлом
+        # Без cache: 'npm' для уникнення помилок
 
     - name: Build frontend
       run: |
@@ -46,9 +46,9 @@ jobs:
           exit 1
         fi
         npm install -g npm@11.6.2
-        npm ci  # Надійніше для CI, використовує package-lock.json
-        npm audit fix || true  # Ігноруємо помилки аудиту
-        CI=false npm run build  # Вимикаємо суворий CI-режим
+        npm ci
+        npm audit fix || true
+        CI=false npm run build
 
     - name: Check MariaDB init
       run: |
@@ -56,13 +56,13 @@ jobs:
           echo "init.sql not found, creating basic one"
           mkdir -p db
           cat > db/init.sql << EOF
-          CREATE TABLE IF NOT EXISTS projects (
-            id BIGINT NOT NULL AUTO_INCREMENT,
-            description VARCHAR(255),
-            name VARCHAR(255),
-            PRIMARY KEY (id)
-          );
-          EOF
+CREATE TABLE IF NOT EXISTS projects (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  description VARCHAR(255),
+  name VARCHAR(255),
+  PRIMARY KEY (id)
+);
+EOF
         fi
 
   deploy:
