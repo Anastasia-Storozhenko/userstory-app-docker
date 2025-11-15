@@ -70,7 +70,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 2222
+          port: 22
           script: |
             cd ${{ secrets.SERVER_DOCKER_COMPOSE_PATH }}
             git pull origin main
