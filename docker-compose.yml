@@ -20,7 +20,7 @@ services:
       - app-network
 
   backend:
-    build: ./backend
+    image: ${BACKEND_IMAGE}
     container_name: userstory-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/userstory
@@ -36,16 +36,16 @@ services:
       - app-network
 
   frontend:
-    build: ./frontend
+    image: ${FRONTEND_IMAGE}
     container_name: userstory-frontend
     environment:
-      REACT_APP_BACKEND_URL: http://backend:8080/api  # Змінено на /api, якщо бекенд використовує /api/projects
+      REACT_APP_BACKEND_URL: http://backend:8080/api
     ports:
       - "80:80"
     depends_on:
       - backend
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf  # Монтуємо nginx.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - app-network
 
