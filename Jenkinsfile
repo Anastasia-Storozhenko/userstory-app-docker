@@ -19,6 +19,12 @@ pipeline {
                 git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/Anastasia-Storozhenko/userstory-app-docker.git'
             }
         }
+        stage('Check Files') {
+            steps {
+                sh 'ls -l nginx.conf || echo "nginx.conf not found"'
+                sh 'cat nginx.conf || echo "Failed to read nginx.conf"'
+            }
+        }
         stage('Login to ECR') {
             steps {
                 withCredentials([
@@ -51,7 +57,7 @@ pipeline {
         stage('Test Application') {
             steps {
                 script {
-                    sh "docker -H ${DOCKER_HOST} exec userstory-frontend curl -s http://backend:8080/api/projects || echo 'API check failed'"
+                    sh "docker -H ${DOCKER_HOST} exec userstory-frontend curl -s http://backend:8080/projects || echo 'API check failed'"
                 }
             }
         }
