@@ -20,7 +20,7 @@ services:
       - app-network
 
   backend:
-    image: ${BACKEND_IMAGE}
+    build: ./backend
     container_name: userstory-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/userstory
@@ -36,10 +36,10 @@ services:
       - app-network
 
   frontend:
-    image: ${FRONTEND_IMAGE}
+    build: ./frontend
     container_name: userstory-frontend
     environment:
-      REACT_APP_BACKEND_URL: http://backend:8080
+      REACT_APP_BACKEND_URL: http://backend:8080/api  # Змінено на /api, якщо бекенд використовує /api/projects
     ports:
       - "80:80"
     depends_on:
