@@ -7,7 +7,7 @@ RUN npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
-# Додаємо базовий nginx.conf, який включає всі .conf файли
+# Додаємо базовий nginx.conf, який включає ВСІ .conf файли
 COPY nginx-base.conf /etc/nginx/nginx.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
