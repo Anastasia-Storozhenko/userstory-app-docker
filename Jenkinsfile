@@ -1,28 +1,20 @@
 pipeline {
     agent any
     parameters {
-        string(name: 'DOCKER_HOST', defaultValue: 'tcp://192.168.56.20:2375', description: 'Docker host address')
-        string(name: 'FRONTEND_IMAGE', defaultValue: '182000022338.dkr.ecr.us-east-1.amazonaws.com/userstory-frontend-repo:latest', description: 'Frontend Docker image')
-        string(name: 'BACKEND_IMAGE', defaultValue: '182000022338.dkr.ecr.us-east-1.amazonaws.com/userstory-backend-repo:latest', description: 'Backend Docker image')
-        string(name: 'COMPOSE_HTTP_TIMEOUT', defaultValue: '120', description: 'Docker Compose HTTP timeout')
+        string(name: 'DOCKER_HOST', defaultValue: 'tcp://192.168.56.20:2375', description: 'Docker host')
+        string(name: 'FRONTEND_IMAGE', defaultValue: '182000022338.dkr.ecr.us-east-1.amazonaws.com/userstory-frontend-repo:latest', description: 'Frontend image')
+        string(name: 'BACKEND_IMAGE', defaultValue: '182000022338.dkr.ecr.us-east-1.amazonaws.com/userstory-backend-repo:latest', description: 'Backend image')
     }
     environment {
         DOCKER_HOST = "${params.DOCKER_HOST}"
         FRONTEND_IMAGE = "${params.FRONTEND_IMAGE}"
         BACKEND_IMAGE = "${params.BACKEND_IMAGE}"
-        COMPOSE_HTTP_TIMEOUT = "${params.COMPOSE_HTTP_TIMEOUT}"
         DOCKER_REGISTRY = '182000022338.dkr.ecr.us-east-1.amazonaws.com'
     }
     stages {
-        stage('Checkout Deploy Repo') {
+        stage('Checkout') {
             steps {
                 git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/Anastasia-Storozhenko/userstory-app-docker.git'
-            }
-        }
-        stage('Check Files') {
-            steps {
-                sh 'ls -l nginx.conf || echo "nginx.conf not found"'
-                sh 'cat nginx.conf || echo "Failed to read nginx.conf"'
             }
         }
         stage('Login to ECR') {
@@ -40,31 +32,27 @@ pipeline {
                 }
             }
         }
-        stage('Deploy with Docker Compose') {
+        stage('Deploy') {
             steps {
-                script {
-                    sh '''
-                        export FRONTEND_IMAGE=${FRONTEND_IMAGE}
-                        export BACKEND_IMAGE=${BACKEND_IMAGE}
-                        docker-compose -H ${DOCKER_HOST} -f docker-compose.yml down || true
-                        docker-compose -H ${DOCKER_HOST} -f docker-compose.yml up -d --force-recreate
-                    '''
-                    sh 'sleep 180'
-                    sh "docker -H ${DOCKER_HOST} ps -a || echo 'No containers running'"
-                }
+                sh '''
+                    export FRONTEND_IMAGE=${FRONTEND_IMAGE}
+                    export BACKEND_IMAGE=${BACKEND_IMAGE}
+                    docker-compose -H ${DOCKER_HOST} down || true
+                    docker-compose -H ${DOCKER_HOST} up -d
+                '''
+                sh 'sleep 100'
+                sh 'docker -H ${DOCKER_HOST} ps -a'
             }
         }
-        stage('Test Application') {
+        stage('Test API') {
             steps {
-                script {
-                    sh "docker -H ${DOCKER_HOST} exec userstory-frontend curl -s http://backend:8080/projects || echo 'API check failed'"
-                }
+                sh 'docker -H ${DOCKER_HOST} exec userstory-frontend curl -s http://backend:8080/projects'
             }
         }
     }
     post {
         always {
-            sh "docker -H ${DOCKER_HOST} logout ${DOCKER_REGISTRY}"
+            sh "docker -H ${DOCKER_HOST} logout ${DOCKER_REGISTRY} || true"
         }
     }
 }
