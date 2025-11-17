@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   db:
-    build: ./db
+    image: mariadb:latest
     container_name: userstory-db
     environment:
       MARIADB_ROOT_PASSWORD: rootpass
@@ -20,7 +20,7 @@ services:
       - app-network
 
   backend:
-    image: ${BACKEND_IMAGE}
+    image: anastasiia191006/userstory-backend:latest
     container_name: userstory-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/userstory
@@ -36,10 +36,10 @@ services:
       - app-network
 
   frontend:
-    image: ${FRONTEND_IMAGE}
+    image: anastasiia191006/userstory-frontend:latest
     container_name: userstory-frontend
     environment:
-      REACT_APP_BACKEND_URL: http://192.168.56.20:8080
+      REACT_APP_BACKEND_URL: http://backend:8080/api
     ports:
       - "80:80"
     depends_on:
