@@ -1,14 +1,13 @@
-# Етап побудови
-FROM maven:3.8.6-openjdk-17 AS build
+# Етап 1 — збірка JAR через Maven
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn package -DskipTests
+COPY backend/pom.xml .
+COPY backend/src ./src
+RUN mvn clean package -DskipTests
 
-# Етап запуску
-FROM openjdk:17-jdk-slim
+# Етап 2 — легкий фінальний образ
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY target/*.jar app.jar
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
