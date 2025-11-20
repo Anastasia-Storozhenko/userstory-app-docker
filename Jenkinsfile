@@ -63,7 +63,7 @@ pipeline {
         }
     }
     post {
-        always {
+        always { 
             sh "docker -H ${DOCKER_HOST} logout ${DOCKER_REGISTRY}"
         }
     }
