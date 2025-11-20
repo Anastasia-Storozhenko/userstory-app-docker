@@ -47,17 +47,28 @@ pipeline {
                         export FRONTEND_IMAGE=${FRONTEND_IMAGE}
                         export BACKEND_IMAGE=${BACKEND_IMAGE}
                         
-                        
+                        echo "Зупиняємо compose..."
                         docker-compose -H ${DOCKER_HOST} -f docker-compose.yml down -v --remove-orphans || true
                         
-                        # Додатково чистимо порт 8080 на всяк випадок
+                        echo "Вбиваємо всі Docker-контейнери, що тримають 8080..."
                         docker -H ${DOCKER_HOST} ps -q --filter "expose=8080" | xargs -r docker -H ${DOCKER_HOST} rm -f || true
                         
-                        # Тепер точно все чисто
+                        echo "Тепер вбиваємо НЕ-docker процеси на 8080 (головне!)"
+                        # Це ключовий рядок — вбиває будь-який процес (java, nginx, тощо)
+                        sudo lsof -i tcp:8080 -t | xargs -r sudo kill -9 || true
+                        
+                        # Альтернатива, якщо lsof немає:
+                        # sudo fuser -k 8080/tcp || true
+                        
+                        echo "Перевіряємо — 8080 має бути вільний:"
+                        docker -H ${DOCKER_HOST} ps -a | grep 8080 || echo "Нічого не знайдено — добре"
+                        
+                        echo "Запускаємо compose..."
                         docker-compose -H ${DOCKER_HOST} -f docker-compose.yml up -d --force-recreate
+                        
+                        sleep 90
+                        docker -H ${DOCKER_HOST} ps -a
                     '''
-                    sh 'sleep 120'
-                    sh "docker -H ${DOCKER_HOST} ps -a"
                 }
             }
         }
