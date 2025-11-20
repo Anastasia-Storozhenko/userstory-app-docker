@@ -46,11 +46,18 @@ pipeline {
                     sh '''
                         export FRONTEND_IMAGE=${FRONTEND_IMAGE}
                         export BACKEND_IMAGE=${BACKEND_IMAGE}
-                        docker-compose -H ${DOCKER_HOST} -f docker-compose.yml down || true
+                        
+                        
+                        docker-compose -H ${DOCKER_HOST} -f docker-compose.yml down -v --remove-orphans || true
+                        
+                        # Додатково чистимо порт 8080 на всяк випадок
+                        docker -H ${DOCKER_HOST} ps -q --filter "expose=8080" | xargs -r docker -H ${DOCKER_HOST} rm -f || true
+                        
+                        # Тепер точно все чисто
                         docker-compose -H ${DOCKER_HOST} -f docker-compose.yml up -d --force-recreate
                     '''
-                    sh 'sleep 180'
-                    sh "docker -H ${DOCKER_HOST} ps -a || echo 'No containers running'"
+                    sh 'sleep 120'
+                    sh "docker -H ${DOCKER_HOST} ps -a"
                 }
             }
         }
